@@ -67,7 +67,7 @@ def gen_machine(db):
     db.commit()
 
 if __name__ == "__main__":
-    BASE_DIR = "/mnt/nvme"
+    BASE_DIR = "/mnt/nvme/onlog"
     
     sqlite3.connect(f"{BASE_DIR}/F02_sensor_env.sqlite").execute("PRAGMA journal_mode=WAL;")
     gen_env(sqlite3.connect(f"{BASE_DIR}/F02_sensor_env.sqlite"))

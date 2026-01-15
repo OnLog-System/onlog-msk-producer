@@ -57,8 +57,8 @@ public class DedupTransformer
         if (now - last > ttl) {
             store.put(key, now);   // overwrite
             context.forward(record);
-            return;
         }
 
         // TTL 이내 → duplicate → drop
     }
+}

@@ -5,6 +5,7 @@
     <groupId>onlog</groupId>
     <artifactId>onlog-pipeline</artifactId>
     <version>0.1.0</version>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
 
   <artifactId>streams-kpi</artifactId>

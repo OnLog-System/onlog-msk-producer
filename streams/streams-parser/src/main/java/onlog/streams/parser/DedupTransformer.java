@@ -1,25 +1,20 @@
 package onlog.streams.parser;
 
+import onlog.common.model.CanonicalEvent;
 import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.ProcessorContext;
 import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.state.KeyValueStore;
 
 public class DedupTransformer
-        implements Processor<String, ParsedWrapper, String, ParsedWrapper> {
+        implements Processor<String, CanonicalEvent, String, CanonicalEvent> {
 
     private KeyValueStore<String, Long> store;
-    private ProcessorContext<String, ParsedWrapper> context;
-
-    // @Override
-    // public void init(ProcessorContext<String, ParsedWrapper> context) {
-    //     this.context = context;
-    //     this.store = context.getStateStore(DedupStoreSupplier.STORE_NAME);
-    // }
+    private ProcessorContext<String, CanonicalEvent> context;
 
     @Override
     @SuppressWarnings("unchecked")
-    public void init(ProcessorContext<String, ParsedWrapper> context) {
+    public void init(ProcessorContext<String, CanonicalEvent> context) {
         this.context = context;
         this.store =
             (KeyValueStore<String, Long>)
@@ -27,15 +22,10 @@ public class DedupTransformer
     }
 
     @Override
-    public void process(Record<String, ParsedWrapper> record) {
-        ParsedWrapper v = record.value();
+    public void process(Record<String, CanonicalEvent> record) {
+        CanonicalEvent v = record.value();
 
-        if (v == null || v.devEui == null || v.fCnt == null) {
-            context.forward(record);
-            return;
-        }
-
-        if (v.edgeIngestTime == null) {
+        if (v == null || v.devEui == null || v.fCnt == null || v.edgeIngestTime == null) {
             context.forward(record);
             return;
         }
@@ -46,19 +36,10 @@ public class DedupTransformer
 
         Long last = store.get(key);
 
-        // 중복이 아니면 통과
-        if (last == null) {
+        if (last == null || now - last > ttl) {
             store.put(key, now);
             context.forward(record);
-            return;
         }
-
-        // TTL 초과 → 새로운 이벤트로 간주 + 기존 key 정리
-        if (now - last > ttl) {
-            store.put(key, now);   // overwrite
-            context.forward(record);
-        }
-
-        // TTL 이내 → duplicate → drop
+        // else: duplicate → drop
     }
 }

@@ -11,10 +11,19 @@ public class DedupTransformer
     private KeyValueStore<String, Long> store;
     private ProcessorContext<String, ParsedWrapper> context;
 
+    // @Override
+    // public void init(ProcessorContext<String, ParsedWrapper> context) {
+    //     this.context = context;
+    //     this.store = context.getStateStore(DedupStoreSupplier.STORE_NAME);
+    // }
+
     @Override
+    @SuppressWarnings("unchecked")
     public void init(ProcessorContext<String, ParsedWrapper> context) {
         this.context = context;
-        this.store = context.getStateStore(DedupStoreSupplier.STORE_NAME);
+        this.store =
+            (KeyValueStore<String, Long>)
+                context.getStateStore(DedupStoreSupplier.STORE_NAME);
     }
 
     @Override

@@ -38,6 +38,14 @@ public class CanonicalEvent {
     public Integer fCnt;
 
     // =========================
+    // Additional decoded fields
+    // =========================
+    public Integer batteryMv;
+    public String batteryStatus;
+    public Double temperature;
+    public Double humidity;
+
+    // =========================
     // Source
     // =========================
     public String sourceId;

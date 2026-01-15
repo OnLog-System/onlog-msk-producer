@@ -84,14 +84,16 @@ public class ParserTopology {
             .mapValues(v -> {
                 ParseErrorEvent e = new ParseErrorEvent();
                 e.occurredAt = Instant.now();
-                e.reason = String.valueOf(v.meta.get("error"));
-                e.raw = String.valueOf(v.meta.get("raw"));
+
+                if (v == null || v.meta == null) {
+                    e.reason = "NULL_EVENT";
+                    e.raw = null;
+                } else {
+                    e.reason = String.valueOf(v.meta.get("error"));
+                    e.raw = String.valueOf(v.meta.get("raw"));
+                }
                 return e;
             })
-            .to(
-                "sensor.parse.dlq",
-                Produced.with(Serdes.String(), new JsonSerde<>(ParseErrorEvent.class))
-            );
 
         // =========================
         // 정상 Canonical flow
@@ -192,6 +194,11 @@ public class ParserTopology {
         e.valueBool = w.valueBool;
 
         e.fCnt = w.fCnt;
+
+        e.batteryMv     = w.batteryMv;
+        e.batteryStatus = w.batteryStatus;
+        e.temperature   = w.temperature;
+        e.humidity      = w.humidity;
 
         e.sourceId = SourceIdUtil.build(
                 w.tenantId,

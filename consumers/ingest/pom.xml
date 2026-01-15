@@ -1,32 +1,25 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>onlog</groupId>
-  <artifactId>ingest-consumer</artifactId>
+  <parent>
+    <groupId>onlog</groupId>
+    <artifactId>onlog-pipeline</artifactId>
+    <version>0.1.0</version>
+  </parent>
+
+  <artifactId>common</artifactId>
   <version>1.0.0</version>
+  <packaging>jar</packaging>
 
   <dependencies>
-
-    <!-- Kafka -->
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-clients</artifactId>
-      <version>3.7.0</version>
-    </dependency>
-
-    <!-- Jackson -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.16.1</version>
     </dependency>
 
-    <!-- Common -->
     <dependency>
-      <groupId>onlog</groupId>
-      <artifactId>common</artifactId>
-      <version>1.0.0</version>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-clients</artifactId>
     </dependency>
-
   </dependencies>
 </project>

@@ -1,0 +1,25 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>onlog</groupId>
+  <artifactId>streams-kpi</artifactId>
+  <version>1.0.0</version>
+
+  <dependencies>
+
+    <!-- Kafka Streams -->
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka-streams</artifactId>
+      <version>3.7.0</version>
+    </dependency>
+
+    <!-- Common -->
+    <dependency>
+      <groupId>onlog</groupId>
+      <artifactId>common</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+  </dependencies>
+</project>

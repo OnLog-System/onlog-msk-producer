@@ -1,0 +1,17 @@
+[Unit]
+Description=OnLog Kafka Streams Parser
+After=network.target
+Requires=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/onlog
+EnvironmentFile=/opt/onlog/env/streams.env
+ExecStart=/opt/onlog/scripts/start-streams-parser.sh
+Restart=always
+RestartSec=5
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

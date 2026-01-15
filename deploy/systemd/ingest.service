@@ -1,0 +1,17 @@
+[Unit]
+Description=OnLog Kafka Ingest Consumer
+After=streams-kpi.service
+Requires=streams-kpi.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/onlog
+EnvironmentFile=/opt/onlog/env/consumer.env
+ExecStart=/opt/onlog/scripts/start-ingest.sh
+Restart=always
+RestartSec=5
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

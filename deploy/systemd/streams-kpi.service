@@ -1,0 +1,17 @@
+[Unit]
+Description=OnLog Kafka Streams KPI
+After=streams-parser.service
+Requires=streams-parser.service
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/onlog
+EnvironmentFile=/opt/onlog/env/streams.env
+ExecStart=/opt/onlog/scripts/start-streams-kpi.sh
+Restart=always
+RestartSec=5
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

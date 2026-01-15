@@ -54,7 +54,7 @@ public class ParserTopology {
         // Dedup
         // =========================
         KStream<String, ParsedWrapper> deduped =
-            parsed.transform(
+            parsed.process(
                 DedupTransformer::new,
                 Named.as("dedup"),
                 DedupStoreSupplier.STORE_NAME

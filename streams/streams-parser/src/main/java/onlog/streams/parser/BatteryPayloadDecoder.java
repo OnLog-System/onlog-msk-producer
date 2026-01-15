@@ -1,20 +1,33 @@
 package onlog.streams.parser;
 
 import java.util.Base64;
+import java.util.Optional;
 
 public class BatteryPayloadDecoder {
 
-    public static Decoded decode(String base64) {
+    /**
+     * Try to decode ENV sensor payload.
+     * Never throws exception.
+     */
+    public static Optional<Decoded> decode(String base64) {
 
-        byte[] data = Base64.getDecoder().decode(base64);
+        if (base64 == null || base64.isEmpty()) {
+            return Optional.empty();
+        }
+
+        byte[] data;
+        try {
+            data = Base64.getDecoder().decode(base64);
+        } catch (IllegalArgumentException e) {
+            // invalid base64
+            return Optional.empty();
+        }
 
         // =========================
-        // Length validation
+        // Length check (NO exception)
         // =========================
         if (data.length < 6) {
-            throw new IllegalArgumentException(
-                "payload too short: " + data.length
-            );
+            return Optional.empty();
         }
 
         // =========================
@@ -48,7 +61,9 @@ public class BatteryPayloadDecoder {
         int humRaw = ((data[4] & 0xFF) << 8) | (data[5] & 0xFF);
         double humidity = humRaw / 10.0;
 
-        return new Decoded(voltageMv, status, temperature, humidity);
+        return Optional.of(
+            new Decoded(voltageMv, status, temperature, humidity)
+        );
     }
 
     public record Decoded(

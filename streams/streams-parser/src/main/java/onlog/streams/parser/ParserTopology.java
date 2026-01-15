@@ -94,6 +94,10 @@ public class ParserTopology {
                 }
                 return e;
             })
+            .to(
+                "sensor.parse.dlq",
+                Produced.with(Serdes.String(), new JsonSerde<>(ParseErrorEvent.class))
+            );
 
         // =========================
         // 정상 Canonical flow
@@ -145,24 +149,27 @@ public class ParserTopology {
             // =========================
             if (payload.has("data")) {
 
-                BatteryPayloadDecoder.Decoded d =
-                    BatteryPayloadDecoder.decode(
-                        payload.get("data").asText()
-                    );
+                BatteryPayloadDecoder
+                    .decode(payload.get("data").asText())
+                    .ifPresent(d -> {
 
-                w.batteryMv     = d.batteryMv();
-                w.batteryStatus = d.batteryStatus();
-                w.temperature   = d.temperature();
-                w.humidity      = d.humidity();
+                        w.batteryMv     = d.batteryMv();
+                        w.batteryStatus = d.batteryStatus();
+                        w.temperature   = d.temperature();
+                        w.humidity      = d.humidity();
 
-                // metric routing
-                if (w.metric != null) {
-                    switch (w.metric) {
-                        case "TEMP" -> w.valueNum = w.temperature;
-                        case "HUMIDITY" -> w.valueNum = w.humidity;
-                        case "BATTERY_MV" -> w.valueNum = (double) w.batteryMv;
-                    }
-                }
+                        // metric routing
+                        if (w.metric != null) {
+                            switch (w.metric) {
+                                case "TEMP" ->
+                                    w.valueNum = w.temperature;
+                                case "HUMIDITY" ->
+                                    w.valueNum = w.humidity;
+                                case "BATTERY_MV" ->
+                                    w.valueNum = (double) w.batteryMv;
+                            }
+                        }
+                    });
             }
 
             return w;

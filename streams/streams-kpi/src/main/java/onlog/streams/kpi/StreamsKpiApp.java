@@ -39,7 +39,7 @@ public class StreamsKpiApp {
 
         props.put(
                 StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG,
-                "org.apache.kafka.common.serialization.Serdes$ByteArraySerde"
+                CanonicalEventSerde.class
         );
 
         StreamsBuilder builder = new StreamsBuilder();

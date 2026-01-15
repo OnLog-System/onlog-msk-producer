@@ -28,6 +28,11 @@ public class StreamsKpiApp {
         );
 
         props.put(
+                StreamsConfig.DEFAULT_TIMESTAMP_EXTRACTOR_CLASS_CONFIG,
+                EdgeIngestTimeExtractor.class
+        );
+
+        props.put(
                 StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG,
                 "org.apache.kafka.common.serialization.Serdes$StringSerde"
         );

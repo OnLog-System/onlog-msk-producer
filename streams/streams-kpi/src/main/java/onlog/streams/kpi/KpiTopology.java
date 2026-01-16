@@ -8,6 +8,8 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.kstream.*;
 
+import java.time.Instant;
+
 public class KpiTopology {
 
     public static void build(StreamsBuilder builder) {
@@ -36,73 +38,75 @@ public class KpiTopology {
         // =========================
         // 1. Production (PACK_SCALE)
         // =========================
-        keyed
-            .filter((k, v) ->
-                    KpiConfig.DEVICE_PACK_SCALE.equals(v.deviceType) &&
-                    KpiConfig.METRIC_WEIGHT.equals(v.metric)
-            )
-            .groupByKey()
-            .windowedBy(window)
-            .aggregate(
-                    () -> 0.0,
-                    (key, event, agg) -> ProductionAggregator.add(agg, event),
-                    Materialized.with(
-                            Serdes.String(),
-                            Serdes.Double()
-                    )
-            )
-            .toStream()
-            // Windowed<String> → String
-            .selectKey((windowedKey, v) -> windowedKey.key())
-            .mapValues((k, total) ->
-                    KpiEvent.production(
-                            Instant.now(),
-                            k,
-                            total
-                    )
-            )
-            .to(
+        KStream<String, KpiEvent> production =
+            keyed
+                .filter((k, v) ->
+                        KpiConfig.DEVICE_PACK_SCALE.equals(v.deviceType) &&
+                        KpiConfig.METRIC_WEIGHT.equals(v.metric)
+                )
+                .groupByKey()
+                .windowedBy(window)
+                .aggregate(
+                        () -> 0.0,
+                        (key, event, agg) -> ProductionAggregator.add(agg, event),
+                        Materialized.with(
+                                Serdes.String(),
+                                Serdes.Double()
+                        )
+                )
+                .toStream()
+                .selectKey((windowedKey, v) -> windowedKey.key())
+                .mapValues(total ->
+                        KpiEvent.production(
+                                Instant.now(),
+                                null,   // tenant|line은 key에서 파싱
+                                total
+                        )
+                );
+
+        production.to(
                 KpiConfig.OUTPUT_TOPIC,
                 Produced.with(
                         Serdes.String(),
                         new JsonSerde<>(KpiEvent.class)
                 )
-            );
+        );
 
         // =========================
         // 2. Yield (UNIT_SCALE)
         // =========================
-        keyed
-            .filter((k, v) ->
-                    KpiConfig.DEVICE_UNIT_SCALE.equals(v.deviceType) &&
-                    KpiConfig.METRIC_WEIGHT.equals(v.metric)
-            )
-            .groupByKey()
-            .windowedBy(window)
-            .aggregate(
-                    YieldAggregator.YieldCount::new,
-                    (key, event, agg) -> YieldAggregator.add(agg, event),
-                    Materialized.with(
-                            Serdes.String(),
-                            new JsonSerde<>(YieldAggregator.YieldCount.class)
-                    )
-            )
-            .toStream()
-            // Windowed<String> → String
-            .selectKey((windowedKey, v) -> windowedKey.key())
-            .mapValues((k, yc) ->
-                    KpiEvent.yield(
-                            Instant.now(),
-                            k,
-                            yc.ratio()
-                    )
-            )
-            .to(
+        KStream<String, KpiEvent> yield =
+            keyed
+                .filter((k, v) ->
+                        KpiConfig.DEVICE_UNIT_SCALE.equals(v.deviceType) &&
+                        KpiConfig.METRIC_WEIGHT.equals(v.metric)
+                )
+                .groupByKey()
+                .windowedBy(window)
+                .aggregate(
+                        YieldAggregator.YieldCount::new,
+                        (key, event, agg) -> YieldAggregator.add(agg, event),
+                        Materialized.with(
+                                Serdes.String(),
+                                new JsonSerde<>(YieldAggregator.YieldCount.class)
+                        )
+                )
+                .toStream()
+                .selectKey((windowedKey, v) -> windowedKey.key())
+                .mapValues(yc ->
+                        KpiEvent.yield(
+                                Instant.now(),
+                                null,
+                                yc.ratio()
+                        )
+                );
+
+        yield.to(
                 KpiConfig.OUTPUT_TOPIC,
                 Produced.with(
                         Serdes.String(),
                         new JsonSerde<>(KpiEvent.class)
                 )
-            );
+        );
     }
 }

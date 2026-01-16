@@ -43,13 +43,22 @@ if [[ "$PRODUCER_MODE" != "realtime" && "$PRODUCER_MODE" != "backfill" ]]; then
 fi
 
 ######################################
-# 5. Docker 설정
+# 5. restart policy 결정
+######################################
+RESTART_POLICY="unless-stopped"
+if [ "$PRODUCER_MODE" = "backfill" ]; then
+  RESTART_POLICY="no"
+fi
+
+######################################
+# 6. Docker 설정
 ######################################
 IMAGE=onlog/msk-producer:latest
 CONTAINER=onlog-msk-producer-${PRODUCER_MODE}
 
 echo "[MODE] $PRODUCER_MODE"
 echo "[DB ] $DB_BASE_PATH"
+echo "[RST ] $RESTART_POLICY"
 
 docker build -t $IMAGE .
 
@@ -57,13 +66,13 @@ docker rm -f $CONTAINER 2>/dev/null || true
 
 docker run -d \
   --name $CONTAINER \
-  --restart unless-stopped \
+  --restart $RESTART_POLICY \
   -e AWS_REGION=ap-northeast-2 \
   -e KAFKA_BOOTSTRAP_SERVERS \
   -e DB_BASE_PATH \
   -e PRODUCER_MODE \
   -v /home/ubuntu/.aws:/root/.aws:ro \
-  -v "$DB_BASE_PATH:$DB_BASE_PATH:ro" \
+  -v "$DB_BASE_PATH:$DB_BASE_PATH" \
   $IMAGE
 
-docker ps | grep $CONTAINER
+docker ps | grep $CONTAINER || true

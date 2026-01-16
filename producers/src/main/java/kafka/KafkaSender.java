@@ -1,7 +1,8 @@
 package kafka;
 
 import model.RawLogRow;
-import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 public class KafkaSender {
 
@@ -12,11 +13,21 @@ public class KafkaSender {
     }
 
     public void send(RawLogRow row) {
+        producer.send(
+            new ProducerRecord<>(
+                row.topic,
+                row.devEui,
+                buildValue(row)
+            )
+        );
+    }
 
-        String topic = row.topic;      // sensor.env.raw 등
-        String key   = row.devEui;     // ✅ transport-level key
+    public void flush() {
+        producer.flush();
+    }
 
-        String value = String.format("""
+    private String buildValue(RawLogRow row) {
+        return String.format("""
             {
               "received_at": "%s",
               "tenant_id": "%s",
@@ -35,7 +46,5 @@ public class KafkaSender {
             row.metric,
             row.payload
         );
-
-        producer.send(new ProducerRecord<>(topic, key, value));
     }
 }

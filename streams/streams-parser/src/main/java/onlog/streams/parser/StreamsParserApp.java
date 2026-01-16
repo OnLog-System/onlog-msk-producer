@@ -18,8 +18,8 @@ public class StreamsParserApp {
         props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG,
                 System.getenv("KAFKA_BOOTSTRAP"));
 
-        props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG,
-                StreamsConfig.EXACTLY_ONCE_V2);
+        // props.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG,
+        //         StreamsConfig.EXACTLY_ONCE_V2);
 
         props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG,
                 "org.apache.kafka.common.serialization.Serdes$StringSerde");

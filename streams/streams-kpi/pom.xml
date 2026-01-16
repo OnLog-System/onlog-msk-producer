@@ -10,6 +10,7 @@
 
   <artifactId>streams-kpi</artifactId>
   <version>1.0.0</version>
+  <packaging>jar</packaging>
 
   <dependencies>
     <dependency>
@@ -28,4 +29,41 @@
       <version>1.0.0</version>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- 실행 가능한 Kafka Streams JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+
+            <configuration>
+              <transformers>
+                <transformer
+                  implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>
+                    onlog.streams.kpi.StreamsKpiApp
+                  </mainClass>
+                </transformer>
+              </transformers>
+
+              <!-- target/streams-kpi-1.0.0.jar 하나만 생성 -->
+              <shadedArtifactAttached>false</shadedArtifactAttached>
+            </configuration>
+
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+
 </project>

@@ -6,27 +6,25 @@ import org.apache.kafka.clients.producer.*;
 public class KafkaSender {
 
     private final KafkaProducer<String, String> producer;
-    private final String topicPrefix;
 
-    public KafkaSender(KafkaProducer<String, String> producer, String topicPrefix) {
+    public KafkaSender(KafkaProducer<String, String> producer) {
         this.producer = producer;
-        this.topicPrefix = topicPrefix;
     }
 
     public void send(RawLogRow row) {
 
-        String topic = topicPrefix + "." + resolveTopic(row.topic);
-        String key = row.tenantId + "." + row.lineId + "." + row.deviceType + "." + row.metric;
+        String topic = row.topic;      // sensor.env.raw 등
+        String key   = row.devEui;     // ✅ transport-level key
 
         String value = String.format("""
             {
-              "received_at":"%s",
-              "tenant_id":"%s",
-              "line_id":"%s",
-              "process":"%s",
-              "device_type":"%s",
-              "metric":"%s",
-              "payload":%s
+              "received_at": "%s",
+              "tenant_id": "%s",
+              "line_id": "%s",
+              "process": "%s",
+              "device_type": "%s",
+              "metric": "%s",
+              "payload": %s
             }
             """,
             row.receivedAt,
@@ -39,12 +37,5 @@ public class KafkaSender {
         );
 
         producer.send(new ProducerRecord<>(topic, key, value));
-    }
-
-    private String resolveTopic(String rawTopic) {
-        if (rawTopic.contains("sensor.env")) return "sensor_env";
-        if (rawTopic.contains("sensor.scale")) return "sensor_scale";
-        if (rawTopic.contains("machine")) return "machine";
-        return "unknown";
     }
 }

@@ -16,11 +16,10 @@ public class Main {
 
         String bootstrap = getenv("KAFKA_BOOTSTRAP_SERVERS");
         String basePath = getenv("DB_BASE_PATH");
-        String prefix = getenv("TOPIC_PREFIX");
 
         var producer = KafkaProducerFactory.create(bootstrap);
         Runtime.getRuntime().addShutdownHook(new Thread(producer::close));
-        var sender = new KafkaSender(producer, prefix);
+        var sender = new KafkaSender(producer);
 
         Instant lastSlot = null;
 
@@ -30,14 +29,19 @@ public class Main {
 
             if (!slot.equals(lastSlot)) {
 
-                for (File db : new File(basePath).listFiles(f -> f.getName().endsWith(".sqlite"))) {
+                File[] dbFiles = new File(basePath)
+                        .listFiles(f -> f.getName().endsWith(".sqlite"));
 
-                    try (Connection conn = SqliteClient.connect(db.getAbsolutePath())) {
-                        RawLogRepository repo = new RawLogRepository(conn);
-                        List<RawLogRow> rows = repo.findBySlot(slot);
+                if (dbFiles != null) {
+                    for (File db : dbFiles) {
 
-                        for (RawLogRow row : rows) {
-                            sender.send(row);
+                        try (Connection conn = SqliteClient.connect(db.getAbsolutePath())) {
+                            RawLogRepository repo = new RawLogRepository(conn);
+                            List<RawLogRow> rows = repo.findBySlot(slot);
+
+                            for (RawLogRow row : rows) {
+                                sender.send(row);
+                            }
                         }
                     }
                 }

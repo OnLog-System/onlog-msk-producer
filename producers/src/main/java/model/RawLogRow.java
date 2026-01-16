@@ -11,5 +11,6 @@ public class RawLogRow {
     public String process;
     public String deviceType;
     public String metric;
+    public String devEui;
     public String payload;
 }

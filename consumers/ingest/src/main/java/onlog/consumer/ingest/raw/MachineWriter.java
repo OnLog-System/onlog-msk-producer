@@ -3,10 +3,14 @@ package onlog.consumer.ingest.raw;
 import onlog.common.model.CanonicalEvent;
 import onlog.consumer.ingest.DbConnectionPool;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class MachineWriter {
+
+    private static final DataSource ds =
+            DbConnectionPool.dataSource();
 
     private static final String SQL = """
         INSERT INTO raw.machine (
@@ -27,18 +31,20 @@ public class MachineWriter {
 
     public static void write(CanonicalEvent e) throws Exception {
 
-        try (Connection c = DbConnectionPool.get();
+        try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement(SQL)) {
 
             ps.setObject(1, e.edgeIngestTime);
             ps.setObject(2, e.edgeIngestTime);
+
             ps.setString(3, e.tenantId);
             ps.setString(4, e.lineId);
             ps.setString(5, e.process);
             ps.setString(6, e.deviceType);
             ps.setString(7, e.metric);
             ps.setString(8, e.devEui);
-            ps.setObject(9, e.valueNum);
+
+            ps.setObject(9,  e.valueNum);
             ps.setObject(10, e.valueBool);
             ps.setString(11, e.sourceId);
 

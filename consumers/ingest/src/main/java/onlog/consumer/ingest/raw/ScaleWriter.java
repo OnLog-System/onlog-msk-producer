@@ -3,10 +3,15 @@ package onlog.consumer.ingest.raw;
 import onlog.common.model.CanonicalEvent;
 import onlog.consumer.ingest.DbConnectionPool;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Types;
 
 public class ScaleWriter {
+
+    private static final DataSource ds =
+            DbConnectionPool.dataSource();
 
     private static final String SQL = """
         INSERT INTO raw.sensor_scale (
@@ -26,18 +31,25 @@ public class ScaleWriter {
 
     public static void write(CanonicalEvent e) throws Exception {
 
-        try (Connection c = DbConnectionPool.get();
+        try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement(SQL)) {
 
             ps.setObject(1, e.edgeIngestTime);
             ps.setObject(2, e.edgeIngestTime);
+
             ps.setString(3, e.tenantId);
             ps.setString(4, e.lineId);
             ps.setString(5, e.process);
             ps.setString(6, e.deviceType);
             ps.setString(7, e.metric);
             ps.setString(8, e.devEui);
-            ps.setDouble(9, e.valueNum);
+
+            if (e.valueNum != null) {
+                ps.setDouble(9, e.valueNum);
+            } else {
+                ps.setNull(9, Types.DOUBLE);
+            }
+
             ps.setString(10, e.sourceId);
 
             ps.executeUpdate();

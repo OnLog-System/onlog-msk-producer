@@ -1,15 +1,30 @@
 package onlog.consumer.ingest;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import javax.sql.DataSource;
 
 public class DbConnectionPool {
 
-    private static final String URL  = System.getenv("DB_URL");
-    private static final String USER = System.getenv("DB_USER");
-    private static final String PASS = System.getenv("DB_PASS");
+    private static final HikariDataSource ds;
 
-    public static Connection get() throws Exception {
-        return DriverManager.getConnection(URL, USER, PASS);
+    static {
+        HikariConfig cfg = new HikariConfig();
+        cfg.setJdbcUrl(System.getenv("DB_URL"));
+        cfg.setUsername(System.getenv("DB_USER"));
+        cfg.setPassword(System.getenv("DB_PASS"));
+
+        cfg.setMaximumPoolSize(10);
+        cfg.setMinimumIdle(2);
+        cfg.setConnectionTimeout(5000);
+        cfg.setIdleTimeout(60000);
+        cfg.setMaxLifetime(600000);
+
+        ds = new HikariDataSource(cfg);
+    }
+
+    public static DataSource dataSource() {
+        return ds;
     }
 }

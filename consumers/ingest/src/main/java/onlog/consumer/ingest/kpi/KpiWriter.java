@@ -3,10 +3,14 @@ package onlog.consumer.ingest.kpi;
 import onlog.consumer.ingest.DbConnectionPool;
 import onlog.common.model.KpiEvent;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 public class KpiWriter {
+
+    private static final DataSource ds =
+            DbConnectionPool.dataSource();
 
     private static final String SQL = """
         INSERT INTO derived.kpi (
@@ -22,7 +26,7 @@ public class KpiWriter {
 
     public static void write(KpiEvent e) throws Exception {
 
-        try (Connection c = DbConnectionPool.get();
+        try (Connection c = ds.getConnection();
              PreparedStatement ps = c.prepareStatement(SQL)) {
 
             ps.setObject(1, e.snapshotTime);
@@ -30,7 +34,7 @@ public class KpiWriter {
             ps.setString(3, e.lineId);
             ps.setString(4, e.kpiType);
             ps.setString(5, e.kpiKey);
-            ps.setDouble(6, e.valueNum);
+            ps.setObject(6, e.valueNum);
 
             ps.executeUpdate();
         }

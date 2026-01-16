@@ -56,7 +56,7 @@ public class KpiTopology {
             .selectKey((windowedKey, v) -> windowedKey.key())
             .mapValues((k, total) ->
                     KpiEvent.production(
-                            System.currentTimeMillis(),
+                            Instant.now(),
                             k,
                             total
                     )
@@ -92,7 +92,7 @@ public class KpiTopology {
             .selectKey((windowedKey, v) -> windowedKey.key())
             .mapValues((k, yc) ->
                     KpiEvent.yield(
-                            System.currentTimeMillis(),
+                            Instant.now(),
                             k,
                             yc.ratio()
                     )

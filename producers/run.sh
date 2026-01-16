@@ -2,7 +2,12 @@
 set -euo pipefail
 
 ######################################
-# 0. .env 생성
+# 0. MODE 결정 (arg > env > default)
+######################################
+MODE="${1:-}"
+
+######################################
+# 1. .env 생성
 ######################################
 if [ ! -f .env ]; then
   echo "[INFO] .env not found. Creating from env.example"
@@ -10,41 +15,49 @@ if [ ! -f .env ]; then
 fi
 
 ######################################
-# 1. env 로드
+# 2. env 로드
 ######################################
 set -a
 source .env
 set +a
 
 ######################################
-# 2. 필수 변수 검증
+# 3. PRODUCER_MODE 결정
+######################################
+if [ -n "$MODE" ]; then
+  PRODUCER_MODE="$MODE"
+else
+  PRODUCER_MODE="${PRODUCER_MODE:-realtime}"
+fi
+
+######################################
+# 4. 필수 변수 검증
 ######################################
 : "${KAFKA_BOOTSTRAP_SERVERS:?}"
 : "${DB_BASE_PATH:?}"
-: "${PRODUCER_MODE:=realtime}"
+: "${PRODUCER_MODE:?}"
+
+if [[ "$PRODUCER_MODE" != "realtime" && "$PRODUCER_MODE" != "backfill" ]]; then
+  echo "[ERROR] PRODUCER_MODE must be 'realtime' or 'backfill'"
+  exit 1
+fi
 
 ######################################
-# 3. Docker 설정
+# 5. Docker 설정
 ######################################
 IMAGE=onlog/msk-producer:latest
 CONTAINER=onlog-msk-producer-${PRODUCER_MODE}
 
 echo "[MODE] $PRODUCER_MODE"
+echo "[DB ] $DB_BASE_PATH"
 
 docker build -t $IMAGE .
 
 docker rm -f $CONTAINER 2>/dev/null || true
 
-# ---- mode별 run 옵션 ----
-if [ "$PRODUCER_MODE" = "realtime" ]; then
-  RESTART_OPT="--restart unless-stopped"
-else
-  RESTART_OPT=""
-fi
-
 docker run -d \
   --name $CONTAINER \
-  $RESTART_OPT \
+  --restart unless-stopped \
   -e AWS_REGION=ap-northeast-2 \
   -e KAFKA_BOOTSTRAP_SERVERS \
   -e DB_BASE_PATH \
@@ -53,4 +66,4 @@ docker run -d \
   -v "$DB_BASE_PATH:$DB_BASE_PATH:ro" \
   $IMAGE
 
-docker ps | grep $CONTAINER || true
+docker ps | grep $CONTAINER
